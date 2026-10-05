@@ -1,4 +1,4 @@
-/*! YF Construct v1.2.0 · the live 3x3 for the yfkk.co Home hero
+/*! YF Construct v1.3.0 · the live 3x3 for the yfkk.co Home hero
  *
  *  Ported from the YFKK Landing MVP (github.com/yfagency/yfkk-landing-mvp,
  *  Brano Beres, 11 Aug 2026), which ported it from construct-lab. Brano's
@@ -98,6 +98,11 @@
     ".yfconstruct-svg .d.on{stroke-dashoffset:0}" +
     ".yfconstruct-svg .d.out{stroke-dashoffset:1;transition:stroke-dashoffset var(--yfconstruct-out,300ms) var(--yfconstruct-oease," + EASE_OUT + ")}" +
     ".yfconstruct-svg .s{transform-origin:3px 3px}" +
+    /* the O grows and shrinks from its centre instead of drawing - see drawOn */
+    ".yfconstruct-svg .o{transform-origin:3px 3px;" +
+      "transition:transform var(--yfconstruct-draw,500ms) var(--yfconstruct-dease," + EASE_DRAW + ")}" +
+    ".yfconstruct-svg .o.gone{transform:scale(0)}" +
+    ".yfconstruct-svg .o.gone.out{transition:transform var(--yfconstruct-out,300ms) var(--yfconstruct-oease," + EASE_OUT + ")}" +
     ".yfconstruct-svg .s.snap{animation:yfconstructSpin var(--yfconstruct-snap,600ms) " + EASE_SNAP + " both}" +
     ".yfconstruct-svg .p.glide{transition:transform var(--yfconstruct-glide,700ms) " + EASE_GLIDE + "}" +
     "@keyframes yfconstructSpin{from{transform:rotate(-32deg) scale(.7)}to{transform:none}}" +
@@ -122,7 +127,7 @@
   }
   /* the strokes of one form, in cell-local node units */
   function strokesOf(name) {
-    if (FORMS[name] === "circle") return [el("circle", { cx: 3, cy: 3, r: 2, "class": "k" })];
+    if (FORMS[name] === "circle") return [el("circle", { cx: 3, cy: 3, r: 2, "class": "k o" })];
     return FORMS[name].map(function (pts) { return el("path", { d: pathD(pts), "class": "k" }); });
   }
   /* a chevron, apex on (cx, cy), run r: right-pointing or down-pointing */
@@ -233,6 +238,18 @@
     nodes.forEach(function (k, n) {
       k.setAttribute("pathLength", "1");
       if (self.sw.still) return;
+      /* THE O DOES NOT DRAW. A closed shape drawn with a stroke spends most of
+         the draw as an open arc, and the ease-out tail holds the last gap open
+         longest, so the circle read as a "C" (Z, 2026-10-05). It grows from
+         its centre on the same timing instead, always a whole ring. */
+      if (k.classList.contains("o")) {
+        if (o.dur) k.style.setProperty("--yfconstruct-draw", Math.round(o.dur) + "ms");
+        if (o.ease) k.style.setProperty("--yfconstruct-dease", o.ease);
+        k.classList.add("gone");
+        void k.getBoundingClientRect();
+        self.at(function () { k.classList.remove("gone"); }, (startDelay || 0) + n * stagger);
+        return;
+      }
       k.classList.add("d");
       if (o.dur) k.style.setProperty("--yfconstruct-draw", Math.round(o.dur) + "ms");
       if (o.ease) k.style.setProperty("--yfconstruct-dease", o.ease);
@@ -257,6 +274,7 @@
         k.style.setProperty("--yfconstruct-oease", EASE_BUTTON);
       }
       k.classList.remove("on"); k.classList.add("out");
+      if (k.classList.contains("o")) k.classList.add("gone");   /* shrinks, see drawOn */
     });
     this.at(function () {
       nodes.forEach(function (k) { if (k.parentNode) k.parentNode.removeChild(k); });
@@ -686,7 +704,7 @@
       instances.push(r.__yfconstruct);
     });
   }
-  window.YFConstruct = { version: "1.2.0", boot: boot, instances: instances };
+  window.YFConstruct = { version: "1.3.0", boot: boot, instances: instances };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();

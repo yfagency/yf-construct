@@ -82,6 +82,11 @@ showing the resolved mark, and pausing when the hero is off screen.
 
 ## Changelog
 
+**1.3.0** (5 Oct 2026). The O is always a whole ring. It used to draw on as a
+stroke like the other forms, and the slow end of that draw held the last gap
+open, so it often read as a "C". It now grows from its centre and shrinks back
+on the same timing.
+
 **1.2.0** (5 Oct 2026). The logo never appears crossed out. The X step is
 gone from the logo sequence: its backslash ran corner to corner through the
 Y and F cells. Now the field clears, Y and F draw, and the slash crosses. The
