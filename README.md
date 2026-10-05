@@ -48,6 +48,8 @@ rejected: it disappears on mid-tones.
   paddings, because Webflow's Tablet/Mobile variable modes scale the spacing
   variables inside the hero.
 - **Phones:** the two prompts stack so they clear the centred scroll line.
+- **Prompt icons:** the script takes over any element inside a prompt whose class
+  starts with `yfconstruct-chev`. Keep that class on the icon.
 
 ## Settings (custom attributes on Hero Construct)
 
@@ -107,6 +109,14 @@ showing the resolved mark, and pausing when the hero is off screen.
   not in code.
 
 ## Changelog
+
+**1.5.0** (5 Oct 2026). The corner prompts' chevrons animate like the
+construct's options. Hovering or focusing Play reel or Scroll marches three
+chevrons in the icon, with the same keyframes, stagger and head start as the
+construct. The two stay in step: hover an option in the construct and its
+corner prompt marches too, and the reverse. In the Designer the icons are
+still the CSS masks. The script swaps in an identical drawn chevron, so
+nothing shifts when it loads.
 
 **1.4.0** (5 Oct 2026). Slashes in neighbouring cells join up. Each cell's "/"
 and "\\" used to stop dead on the cell corner, and the cell's clip pinched the

@@ -1,4 +1,4 @@
-/*! YF Construct v1.4.0 · the live 3x3 for the yfkk.co Home hero
+/*! YF Construct v1.5.0 · the live 3x3 for the yfkk.co Home hero
  *
  *  Ported from the YFKK Landing MVP (github.com/yfagency/yfkk-landing-mvp,
  *  Brano Beres, 11 Aug 2026), which ported it from construct-lab. Brano's
@@ -218,6 +218,71 @@
     host.appendChild(svg);
     this.svg = svg;
     this.resize();
+    this.buildIcons();
+  };
+
+  /* ── THE CORNER PROMPTS' ICONS ─────────────────────────────────────────────
+     Each corner prompt's chevron (the div with the yfconstruct-chev or
+     yfconstruct-chevdown class) is a CSS mask in the Designer. Here it is
+     redrawn as an SVG with exactly the same chevron and weight, so nothing
+     moves when the script takes over, and it can then do what the construct's
+     options do: march three chevrons while that option is hovered or focused,
+     whether from the corner or from the construct itself (Z, 2026-10-05).
+     Same keyframes, same seventh-of-a-second stagger, same head start. In the
+     icon's 4-unit box the three chevrons sit one unit apart, so the march fits
+     the icon instead of spilling into the label. */
+  var ICON_SW = 0.25;                       /* the masks' stroke-width */
+  Construct.prototype.buildIcons = function () {
+    var self = this;
+    this.icons = {};
+    [].slice.call(this.scope.querySelectorAll("[data-yfconstruct-action]")).forEach(function (t) {
+      if (self.root.contains(t)) return;
+      var host = t.querySelector("[class*='yfconstruct-chev']");
+      var action = t.getAttribute("data-yfconstruct-action");
+      if (!host || self.icons[action]) return;
+      var svg = el("svg", { viewBox: "0 0 4 4", "aria-hidden": "true", focusable: "false", "class": "yfconstruct-svg" });
+      svg.style.cssText = "display:block;width:100%;height:100%;overflow:visible;--yfconstruct-sw:" + ICON_SW;
+      if (self.sw.still) svg.classList.add("still");
+      host.style.webkitMaskImage = "none";
+      host.style.maskImage = "none";
+      host.style.backgroundColor = "transparent";
+      host.textContent = "";
+      host.appendChild(svg);
+      self.icons[action] = { svg: svg, dir: action === "play" ? "r" : "d", live: null };
+      self.icon(action, false, true);
+    });
+  };
+  /* rest: the Designer's single chevron. live: three, marching. */
+  Construct.prototype.icon = function (action, live, instant) {
+    var ic = this.icons && this.icons[action];
+    if (!ic || ic.live === live) return;
+    ic.live = live;
+    ic.svg.textContent = "";
+    if (live) {
+      for (var n = 0; n < 3; n++) {
+        var k = ic.dir === "r" ? chevron("r", 2 + n, 2, 2) : chevron("d", 2, 2 + n, 2);
+        k.setAttribute("pathLength", "1");
+        k.classList.add("n");
+        k.style.animationDelay = (n * 0.14 - 0.45).toFixed(2) + "s";
+        ic.svg.appendChild(k);
+      }
+      return;
+    }
+    var rest = ic.dir === "r" ? chevron("r", 3, 2, 2) : chevron("d", 2, 3, 2);
+    ic.svg.appendChild(rest);
+    rest.setAttribute("pathLength", "1");
+    if (instant || this.sw.still) return;
+    /* drawn on here, not through drawOn: the instance timers are cleared on
+       every state change, and the release that calls this changes state */
+    rest.classList.add("d");
+    rest.style.setProperty("--yfconstruct-draw", Math.round(this.t.hover * 0.7) + "ms");
+    rest.style.setProperty("--yfconstruct-dease", EASE_BUTTON);
+    void rest.getBoundingClientRect();
+    rest.classList.add("on");
+  };
+  Construct.prototype.iconsShow = function (which) {
+    this.icon("play", which === "play");
+    this.icon("scroll", which === "scroll");
   };
 
   /* stroke in node units = px / (px per node). Re-measured on resize so the
@@ -506,6 +571,7 @@
      The shuffle's own motion (draw 500, spin 600) is untouched. */
   Construct.prototype.offer = function (which) {
     this.want = which;
+    this.iconsShow(which);
     if (this.state === "offer") { if (this.gathered) this.chevrons(which); return; }
     this.go("offer");
     this.gathered = false;
@@ -551,10 +617,11 @@
   };
   Construct.prototype.release = function () {
     if (this.state !== "offer") return;
-    if (this.sw.still) return this.resolved();
+    if (this.sw.still) { this.iconsShow(null); return this.resolved(); }
     this.go("release");
     var H = this.t.hover;
     this.which = null;
+    this.iconsShow(null);
     this.drawOff([].slice.call(this.logo.childNodes), null, H * 0.4);
     this.fillThen(this.shuffle, { start: H * 0.1, step: H * 0.03, dur: H * 0.6, end: H });
   };
@@ -726,7 +793,7 @@
       instances.push(r.__yfconstruct);
     });
   }
-  window.YFConstruct = { version: "1.4.0", boot: boot, instances: instances };
+  window.YFConstruct = { version: "1.5.0", boot: boot, instances: instances };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
