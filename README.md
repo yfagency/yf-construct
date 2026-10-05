@@ -23,6 +23,21 @@ The script is registered in Webflow as **YFConstruct** and applied to the
 Home page footer. It's hosted from this repo through jsDelivr, pinned to a
 tag, with an integrity hash.
 
+## Readability over video
+
+The mark, the corner prompts and the cursor label are Brand/Light with a thin
+dark outline: `filter: drop-shadow(0 0 1px rgba(39,39,39,.9))`, applied twice,
+on `.yfconstruct`, `.yfconstruct-prompts` and `.yfconstruct-cursor`. This is a
+class setting in Webflow, not part of this script. It reads on light, mid-tone
+and dark frames.
+
+**Invert was tested and rejected (5 Oct 2026).** `mix-blend-mode: difference`
+is the only option that reacts to the video, because a page can't read the
+pixels of a Vimeo embed. It disappears on mid-tones: grey at 128 inverts to
+127. The outline colour is written as Brand/Dark's value (#272727 at 90%),
+because Webflow's filter field can't hold a variable. If Brand/Dark changes,
+update those three classes.
+
 ## Settings (custom attributes on Hero Construct)
 
 | Attribute | Default | What it does |
