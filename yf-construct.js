@@ -1,4 +1,4 @@
-/*! YF Construct v1.3.0 · the live 3x3 for the yfkk.co Home hero
+/*! YF Construct v1.4.0 · the live 3x3 for the yfkk.co Home hero
  *
  *  Ported from the YFKK Landing MVP (github.com/yfagency/yfkk-landing-mvp,
  *  Brano Beres, 11 Aug 2026), which ported it from construct-lab. Brano's
@@ -125,10 +125,25 @@
     for (var k in attrs) e.setAttribute(k, attrs[k]);
     return e;
   }
-  /* the strokes of one form, in cell-local node units */
-  function strokesOf(name) {
+  /* the strokes of one form, in cell-local node units.
+     CORNER SLASHES RUN ON. A "/" or "\\" ends exactly on its cell's corners,
+     where it meets the next cell's slash. Cut off at the corner, two flat ends
+     only touch at a point, and the cell clip pinched each end to nothing, so a
+     run of slashes read as separate dashes (Z, 2026-10-05). Each slash now
+     runs half a stroke width past both corners: two slashes in line overlap
+     into one unbroken line, and two meeting at a right angle close into a
+     clean mitred corner. `sw` is the stroke width in node units. */
+  function strokesOf(name, sw) {
     if (FORMS[name] === "circle") return [el("circle", { cx: 3, cy: 3, r: 2, "class": "k o" })];
-    return FORMS[name].map(function (pts) { return el("path", { d: pathD(pts), "class": "k" }); });
+    var e = (sw || 0) / 2 / Math.SQRT2;          /* half a width, per axis */
+    return FORMS[name].map(function (pts) {
+      if (name === "/" || name === "\\") {
+        var a = pts[0], b = pts[1];
+        var dx = Math.sign(b[0] - a[0]) * e, dy = Math.sign(b[1] - a[1]) * e;
+        pts = [[a[0] - dx, a[1] - dy], [b[0] + dx, b[1] + dy]];
+      }
+      return el("path", { d: pathD(pts), "class": "k" });
+    });
   }
   /* a chevron, apex on (cx, cy), run r: right-pointing or down-pointing */
   function chevron(dir, cx, cy, r) {
@@ -174,18 +189,24 @@
     var host = this.root.querySelector("[data-yfconstruct-mark]") || this.root;
     var svg = el("svg", { viewBox: "0 0 18 18", "aria-hidden": "true", focusable: "false", "class": "yfconstruct-svg" });
     svg.style.cssText = "display:block;width:100%;height:100%;overflow:visible";
-    var clipId = "yfconstructClip" + this.id;
     var style = el("style", {});
     style.textContent = SVG_CSS;
     var defs = el("defs", {});
-    var cp = el("clipPath", { id: clipId });
-    cp.appendChild(el("rect", { x: 0, y: 0, width: 6, height: 6 }));
-    defs.appendChild(cp);
     svg.appendChild(style);
     svg.appendChild(defs);
     this.cells = [];
     for (var i = 0; i < 9; i++) {
-      var g = el("g", { transform: "translate(" + (i % 3) * 6 + " " + Math.floor(i / 3) * 6 + ")",
+      /* Each cell clips to itself, plus a margin on the sides it shares with
+         another cell, so a slash's run-on (see strokesOf) can reach across the
+         corner. The construct's outer edges stay cut flush. */
+      var col = i % 3, row = Math.floor(i / 3), M = 1;
+      var x0 = col > 0 ? -M : 0, y0 = row > 0 ? -M : 0;
+      var x1 = col < 2 ? 6 + M : 6, y1 = row < 2 ? 6 + M : 6;
+      var clipId = "yfconstructClip" + this.id + "_" + i;
+      var cp = el("clipPath", { id: clipId });
+      cp.appendChild(el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0 }));
+      defs.appendChild(cp);
+      var g = el("g", { transform: "translate(" + col * 6 + " " + row * 6 + ")",
                         "clip-path": "url(#" + clipId + ")" });
       svg.appendChild(g);
       this.cells.push({ i: i, g: g, form: null, p: null });
@@ -204,7 +225,8 @@
   Construct.prototype.resize = function () {
     var size = this.svg.getBoundingClientRect().width || 144;
     var px = num(this.root, "data-stroke", size / 36);
-    this.svg.style.setProperty("--yfconstruct-sw", (px * 18 / size).toFixed(4));
+    this.swUnits = px * 18 / size;
+    this.svg.style.setProperty("--yfconstruct-sw", this.swUnits.toFixed(4));
   };
 
   /* ── TIMERS: every one belongs to the instance and dies on a state change ──
@@ -307,7 +329,7 @@
   Construct.prototype.paint = function (cell, name, from, o) {
     var s = el("g", { "class": "s" });
     var p = el("g", { "class": "p" });
-    var strokes = strokesOf(name);
+    var strokes = strokesOf(name, this.swUnits);
     strokes.forEach(function (k) { p.appendChild(k); });
     s.appendChild(p);
     cell.g.textContent = "";
@@ -704,7 +726,7 @@
       instances.push(r.__yfconstruct);
     });
   }
-  window.YFConstruct = { version: "1.3.0", boot: boot, instances: instances };
+  window.YFConstruct = { version: "1.4.0", boot: boot, instances: instances };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();

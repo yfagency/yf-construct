@@ -108,6 +108,14 @@ showing the resolved mark, and pausing when the hero is off screen.
 
 ## Changelog
 
+**1.4.0** (5 Oct 2026). Slashes in neighbouring cells join up. Each cell's "/"
+and "\\" used to stop dead on the cell corner, and the cell's clip pinched the
+end to a point. So a run of slashes across cells read as separate dashes with
+gaps between them. Each slash now runs half a stroke width past its corners,
+and cells clip with a small margin on their inside edges. Slashes in line
+overlap into one long line, and two meeting at a right angle close into a
+clean corner. The construct's outer edges are still cut flush.
+
 **1.3.0** (5 Oct 2026). The O is always a whole ring. It used to draw on as a
 stroke like the other forms, and the slow end of that draw held the last gap
 open, so it often read as a "C". It now grows from its centre and shrinks back
