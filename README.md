@@ -27,11 +27,13 @@ tag, with an integrity hash.
 
 The video is darkened, not the mark. **Hero Scrim** is a plain Webflow element
 directly above the video wrapper: class `yfhero-scrim`, Brand/Dark at
-**opacity 0.4**. That's the same treatment House of Yellow uses on their reel:
-a flat black layer at 40% (houseofyellow.nl, checked 5 Oct 2026). The
+**opacity 0.5**. The
 construct, prompts, cursor label and scroll line all sit above it, so the reel
-reads as a background layer and the mark as a separate layer on top. To retune,
-change the opacity on the class. It shows in the Designer.
+reads as a background layer and the mark as a separate layer on top. Why 50%: the mark is a graphic, so it needs at least 3:1 contrast,
+and 49.5% is the lowest scrim that holds 3:1 on a pure white frame. At the
+first setting, 40%, it measured 2.4:1 on white and 2.8:1 on yellow. The corner
+prompts sit at full opacity for the same reason. To retune, change the opacity
+on the class. It shows in the Designer.
 
 **Never outlines (Z, 5 Oct 2026).** A thin dark outline on the strokes was
 tried and removed. Invert (`mix-blend-mode: difference`) was also tried and
