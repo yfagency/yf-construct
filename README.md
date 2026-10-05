@@ -39,6 +39,16 @@ on the class. It shows in the Designer.
 tried and removed. Invert (`mix-blend-mode: difference`) was also tried and
 rejected: it disappears on mid-tones.
 
+## Layout in the hero
+
+- **Stroke:** fixed at 2px (`data-stroke="2"`). The default would be about 5.6px at the
+  200px desktop size, which is too heavy beside the nav. At 1px the line gets lost over the video.
+- **Corner prompts:** the left edge matches the logo, at 4rem desktop and medium,
+  2rem small, 1.5rem tiny. These are literal values, like the hero and nav
+  paddings, because Webflow's Tablet/Mobile variable modes scale the spacing
+  variables inside the hero.
+- **Phones:** the two prompts stack so they clear the centred scroll line.
+
 ## Settings (custom attributes on Hero Construct)
 
 | Attribute | Default | What it does |
@@ -50,7 +60,7 @@ rejected: it disappears on mid-tones.
 | `data-hold` | 2000 | ms the resolved logo holds |
 | `data-wander` | 45 | % chance a cell takes any form, not its own |
 | `data-travel` | 30 | % chance two cells trade places |
-| `data-stroke` | size / 36 | stroke in px (4px at 144px) |
+| `data-stroke` | size / 36 | stroke in px (4px at 144px). The Home hero sets `2`: a fixed 2px line at every size |
 | `data-hover` | 450 | ms the hover transition takes, in and out. Matches the capsule buttons' 450ms wipe and uses the same curve |
 
 ## Switches (combo classes on Hero Construct)
