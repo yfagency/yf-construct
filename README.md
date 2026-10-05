@@ -35,6 +35,7 @@ tag, with an integrity hash.
 | `data-wander` | 45 | % chance a cell takes any form, not its own |
 | `data-travel` | 30 | % chance two cells trade places |
 | `data-stroke` | size / 36 | stroke in px (4px at 144px) |
+| `data-hover` | 450 | ms the hover transition takes, in and out. Matches the capsule buttons' 450ms wipe and uses the same curve |
 
 ## Switches (combo classes on Hero Construct)
 
@@ -58,9 +59,9 @@ showing the resolved mark, and pausing when the hero is off screen.
 - **One geometry.** Every form sits on whole nodes, six to a cell. The MVP's
   three X's were drawn at three slightly different insets. Now they're one
   form, and X, Y, F and O share the same 4-node box.
-- **The X really resolves to the slash.** The MVP replaced the X with a
-  freshly drawn slash, so the slash drew twice. Now the backslash retracts
-  and the slash that stays is the one that was already drawn.
+- **No X step.** The MVP drew an X before the slash. Its backslash crossed
+  out the Y and F, so the logo now resolves as field clears, then Y, F,
+  slash. The slash draws once.
 - **Intro.** The page opens on the mark: Y and F draw, the slash crosses,
   and then the seven cells grow in. Switch off with `no-intro`.
 - **Hover is choreographed.** Entering gathers the cells outside-in and draws
@@ -78,6 +79,24 @@ showing the resolved mark, and pausing when the hero is off screen.
 - SVG styles are scoped to `.yfconstruct-svg`, so nothing leaks into the site.
 - Timing and behaviour are set in the Designer (attributes and combo classes),
   not in code.
+
+## Changelog
+
+**1.2.0** (5 Oct 2026). The logo never appears crossed out. The X step is
+gone from the logo sequence: its backslash ran corner to corner through the
+Y and F cells. Now the field clears, Y and F draw, and the slash crosses. The
+shuffle also can't randomly land Y top-left, F bottom-right and an X or
+backslash in the centre. Includes the 1.1.0 hover changes.
+
+**1.1.0** (5 Oct 2026). The hover transition now runs in 450ms on the capsule
+buttons' curve, `cubic-bezier(0,0,.58,1)`, instead of about 1.3s. Z: at the old
+speed it didn't feel like anything was happening. The cells retract together
+while the chevrons draw over them, and leaving regrows the cells within the
+same 450ms. Tunable with `data-hover`. When you hover an option, its chevron
+march starts already drawn. Also fixed: a stroke with no delay could skip its
+draw and pop on.
+
+**1.0.0** (5 Oct 2026). First release.
 
 ## Releasing a new version
 

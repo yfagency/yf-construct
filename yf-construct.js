@@ -1,4 +1,4 @@
-/*! YF Construct v1.0.0 · the live 3x3 for the yfkk.co Home hero
+/*! YF Construct v1.2.0 · the live 3x3 for the yfkk.co Home hero
  *
  *  Ported from the YFKK Landing MVP (github.com/yfagency/yfkk-landing-mvp,
  *  Brano Beres, 11 Aug 2026), which ported it from construct-lab. Brano's
@@ -30,6 +30,8 @@
  *    data-wander         % chance a cell takes any form, not its own (45)
  *    data-travel         % chance two cells trade instead of one changing (30)
  *    data-stroke         stroke in px (default: size / 36, 4px at 144px)
+ *    data-hover          ms the hover transition takes, in and out (450, the
+ *                        same as the site's capsule button wipe)
  *
  *  SWITCHES ARE COMBO CLASSES ON .yfconstruct, toggled in the Designer:
  *    on-light   ink on a light ground (colour is the class's own; CSS only)
@@ -67,7 +69,6 @@
     ["/", "\\"],      ["O", "/", "\\"], ["F", "/", "\\"]
   ];
   var SLASH = [[18, 0], [0, 18]];          /* drawn top-right to bottom-left */
-  var BACKSLASH = [[0, 0], [18, 18]];
   /* the seven non-logo cells, outside-in. Y (0) and F (8) never leave. */
   var CONVERGE = [2, 6, 1, 7, 3, 5, 4];
 
@@ -76,12 +77,14 @@
     wander: 45, travel: 30, glide: 700,
     logoEvery: 10000, buildStep: 500, hold: 2000,
     converge: 110, regrow: 110,
-    gather: 45            /* hover: faster outside-in than the logo's 110 */
+    hover: 450            /* the site's capsule wipe: 450ms, see HOVER below */
   };
   var EASE_SNAP = "cubic-bezier(.2,1.5,.3,1)";
   var EASE_DRAW = "cubic-bezier(.16,.9,.2,1)";
   var EASE_OUT = "cubic-bezier(.6,0,.9,.3)";
   var EASE_GLIDE = "cubic-bezier(.3,1.15,.3,1)";
+  /* the capsule buttons' own curve, from the site footer's YF BUTTON SYSTEM */
+  var EASE_BUTTON = "cubic-bezier(0,0,.58,1)";
 
   /* Styles that only exist inside the drawn SVG, every rule scoped to
      .yfconstruct-svg (an inline <style> is page-global). Nothing here touches
@@ -91,9 +94,9 @@
     ".yfconstruct-svg .k{fill:none;stroke:currentColor;stroke-width:var(--yfconstruct-sw,.5);" +
       "stroke-linejoin:miter;stroke-miterlimit:2;stroke-linecap:butt}" +
     ".yfconstruct-svg .d{stroke-dasharray:1;stroke-dashoffset:1;" +
-      "transition:stroke-dashoffset var(--yfconstruct-draw,500ms) " + EASE_DRAW + "}" +
+      "transition:stroke-dashoffset var(--yfconstruct-draw,500ms) var(--yfconstruct-dease," + EASE_DRAW + ")}" +
     ".yfconstruct-svg .d.on{stroke-dashoffset:0}" +
-    ".yfconstruct-svg .d.out{stroke-dashoffset:1;transition:stroke-dashoffset var(--yfconstruct-out,300ms) " + EASE_OUT + "}" +
+    ".yfconstruct-svg .d.out{stroke-dashoffset:1;transition:stroke-dashoffset var(--yfconstruct-out,300ms) var(--yfconstruct-oease," + EASE_OUT + ")}" +
     ".yfconstruct-svg .s{transform-origin:3px 3px}" +
     ".yfconstruct-svg .s.snap{animation:yfconstructSpin var(--yfconstruct-snap,600ms) " + EASE_SNAP + " both}" +
     ".yfconstruct-svg .p.glide{transition:transform var(--yfconstruct-glide,700ms) " + EASE_GLIDE + "}" +
@@ -150,7 +153,8 @@
       logoEvery: num(r, "data-logo-every", BASE.logoEvery),
       hold: num(r, "data-hold", BASE.hold),
       wander: num(r, "data-wander", BASE.wander),
-      travel: num(r, "data-travel", BASE.travel)
+      travel: num(r, "data-travel", BASE.travel),
+      hover: num(r, "data-hover", BASE.hover)
     };
     this.sw = {
       still: REDUCE || cl.contains("still"),
@@ -220,28 +224,44 @@
     this.state = state;
   };
 
-  /* draw a set of strokes on, one after another */
-  Construct.prototype.drawOn = function (nodes, startDelay) {
+  /* draw a set of strokes on, one after another. `o` overrides the timing:
+     { dur, ease, stagger } - used by the hover, which runs on its own clock. */
+  Construct.prototype.drawOn = function (nodes, startDelay, o) {
     var self = this;
+    o = o || {};
+    var stagger = o.stagger != null ? o.stagger : BASE.stagger;
     nodes.forEach(function (k, n) {
       k.setAttribute("pathLength", "1");
       if (self.sw.still) return;
       k.classList.add("d");
-      self.at(function () { k.classList.add("on"); }, (startDelay || 0) + n * BASE.stagger);
+      if (o.dur) k.style.setProperty("--yfconstruct-draw", Math.round(o.dur) + "ms");
+      if (o.ease) k.style.setProperty("--yfconstruct-dease", o.ease);
+      /* Flush style so the undrawn state is committed before "on" lands.
+         Without this a zero-delay first stroke could skip its transition and
+         pop on instead of drawing. */
+      void k.getBoundingClientRect();
+      self.at(function () { k.classList.add("on"); }, (startDelay || 0) + n * stagger);
     });
   };
-  /* retract strokes, then remove them */
-  Construct.prototype.drawOff = function (nodes, then) {
+  /* retract strokes, then remove them. `dur` overrides the 300ms retract. */
+  Construct.prototype.drawOff = function (nodes, then, dur) {
     if (this.sw.still || !nodes.length) {
       nodes.forEach(function (k) { if (k.parentNode) k.parentNode.removeChild(k); });
       if (then) then.call(this);
       return;
     }
-    nodes.forEach(function (k) { k.classList.remove("on"); k.classList.add("out"); });
+    var out = dur || BASE.out;
+    nodes.forEach(function (k) {
+      if (dur) {
+        k.style.setProperty("--yfconstruct-out", Math.round(dur) + "ms");
+        k.style.setProperty("--yfconstruct-oease", EASE_BUTTON);
+      }
+      k.classList.remove("on"); k.classList.add("out");
+    });
     this.at(function () {
       nodes.forEach(function (k) { if (k.parentNode) k.parentNode.removeChild(k); });
       if (then) then.call(this);
-    }, BASE.out + 20);
+    }, out + 20);
   };
 
   /* ── CELLS ───────────────────────────────────────────────────────────────── */
@@ -251,13 +271,22 @@
       name = Math.random() * 100 < this.t.wander
         ? FORM_NAMES[Math.floor(Math.random() * FORM_NAMES.length)]
         : CELL_FORMS[cell.i][Math.floor(Math.random() * CELL_FORMS[cell.i].length)];
-    } while (name === cell.form && ++guard < 12);   /* a change is a change */
+    } while ((name === cell.form || this.crosses(cell.i, name)) && ++guard < 12);
     return name;
+  };
+  /* The other way the logo could look crossed out: Y in cell 0, F in cell 8
+     and an X or a backslash landing in the centre, all by chance in the
+     shuffle. True if putting `name` in cell `i` would complete that picture. */
+  var CROSS = { "X": 1, "\\": 1 };
+  Construct.prototype.crosses = function (i, name) {
+    var f = this.cells.map(function (c) { return c.form; });
+    f[i] = name;
+    return f[0] === "Y" && f[8] === "F" && !!CROSS[f[4]];
   };
 
   /* paint a form into a cell. `from` slides it in from another cell's place
      (a trade); otherwise it spins in and draws on. */
-  Construct.prototype.paint = function (cell, name, from) {
+  Construct.prototype.paint = function (cell, name, from, o) {
     var s = el("g", { "class": "s" });
     var p = el("g", { "class": "p" });
     var strokes = strokesOf(name);
@@ -274,18 +303,26 @@
       strokes.forEach(function (k) { k.setAttribute("pathLength", "1"); });
       return;
     }
-    if (!this.sw.still) s.classList.add("snap");
-    this.drawOn(strokes);
+    if (!this.sw.still) {
+      if (o && o.dur) s.style.setProperty("--yfconstruct-snap", Math.round(o.dur) + "ms");
+      s.classList.add("snap");
+    }
+    this.drawOn(strokes, 0, o);
   };
-  Construct.prototype.retract = function (cell) {
+  Construct.prototype.retract = function (cell, dur) {
     var nodes = [].slice.call(cell.g.querySelectorAll(".k"));
     cell.form = null; cell.p = null;
     var g = cell.g;
-    this.drawOff(nodes, function () { g.textContent = ""; });
+    this.drawOff(nodes, function () { g.textContent = ""; }, dur);
   };
   Construct.prototype.trade = function (a, b) {
     var fa = a.form, fb = b.form;
     if (!fa || !fb) return;
+    if (this.crosses(a.i, fb) || this.crosses(b.i, fa)) return;   /* see crosses() */
+    var save = a.form; a.form = fb;
+    var bad = this.crosses(b.i, fa);
+    a.form = save;
+    if (bad) return;
     var dax = ((b.i % 3) - (a.i % 3)) * 6, day = (Math.floor(b.i / 3) - Math.floor(a.i / 3)) * 6;
     this.paint(a, fb, [dax, day]);
     this.paint(b, fa, [-dax, -day]);
@@ -330,14 +367,18 @@
     this.at(this.regrow, BASE.draw * 2 + Math.min(this.t.hold, 1200));
   };
 
-  /* fill any empty cell, then continue (used after pausing and on exit) */
-  Construct.prototype.fillThen = function (next) {
+  /* fill any empty cell, then continue (used after pausing and on exit).
+     `o` = { start, step, dur } runs it on the hover's clock instead. */
+  Construct.prototype.fillThen = function (next, o) {
     var self = this, n = 0;
+    o = o || {};
+    var start = o.start || 0, step = o.step != null ? o.step : BASE.regrow;
+    var paintOpts = o.dur ? { dur: o.dur, ease: EASE_BUTTON, stagger: 0 } : null;
     CONVERGE.slice().reverse().concat([0, 8]).forEach(function (idx) {
       var c = self.cells[idx];
-      if (!c.form) self.at(function () { self.paint(c, self.pick(c)); }, (n++) * BASE.regrow);
+      if (!c.form) self.at(function () { self.paint(c, self.pick(c), null, paintOpts); }, start + (n++) * step);
     });
-    this.at(next, n * BASE.regrow + BASE.draw);
+    this.at(next, o.end != null ? o.end : start + n * step + BASE.draw);
   };
 
   Construct.prototype.shuffle = function () {
@@ -377,28 +418,30 @@
     this.at(this.tick, gap);
   };
 
-  /* Converge: the seven retract outside-in, leaving Y and F standing. The X
-     draws across; its backslash then RETRACTS, so the slash that remains is
-     the one that was drawn (the MVP repainted it from nothing, which read as a
-     second, unexplained draw). Hold, then regrow. */
+  /* Converge: every cell retracts outside-in, except a Y already standing in
+     cell 0 or an F already in cell 8. Then Y and F draw, then the slash
+     crosses between them. Hold, then regrow.
+     NO X STEP (Z, 2026-10-05). The MVP drew a full X and retracted its
+     backslash. That backslash runs corner to corner through the Y cell and the
+     F cell, so for half a second every cycle the logo read as crossed out.
+     The letters now draw only once the field is clear, so nothing ever sits
+     across them. */
   Construct.prototype.logoSequence = function () {
     this.go("logo");
     var self = this;
-    if (this.cells[0].form !== "Y") this.paint(this.cells[0], "Y");
-    if (this.cells[8].form !== "F") this.paint(this.cells[8], "F");
-    CONVERGE.forEach(function (idx, n) {
+    var keepY = this.cells[0].form === "Y", keepF = this.cells[8].form === "F";
+    var order = [].concat(keepY ? [] : [0], keepF ? [] : [8], CONVERGE);
+    order.forEach(function (idx, n) {
       self.at(function () { self.retract(self.cells[idx]); }, n * BASE.converge);
     });
-    var t = CONVERGE.length * BASE.converge + BASE.out;
-    var slash, back;
+    var t = order.length * BASE.converge + BASE.out;
     this.at(function () {
       this.logo.textContent = "";
-      slash = this.logoStroke(SLASH);
-      back = this.logoStroke(BACKSLASH);
-      this.drawOn([slash, back]);
+      if (!keepY) this.paint(this.cells[0], "Y");
+      if (!keepF) this.at(function () { this.paint(this.cells[8], "F"); }, BASE.stagger);
+      this.drawOn([this.logoStroke(SLASH)], BASE.stagger * 2);
     }, t);
-    this.at(function () { this.drawOff([back]); }, t + BASE.buildStep * 2);
-    this.at(this.regrow, t + BASE.buildStep * 2 + BASE.out + this.t.hold);
+    this.at(this.regrow, t + BASE.stagger * 2 + BASE.draw + this.t.hold);
   };
 
   Construct.prototype.regrow = function () {
@@ -409,33 +452,44 @@
 
   /* ── HOVER: THE MARK BECOMES THE TWO OPTIONS ────────────────────────────────
      The slash stays. Y's cell carries the play chevron, F's the scroll
-     chevron. NEW: entering gathers the seven outside-in and draws the
-     chevrons on, leaving regrows them in reverse, the same gesture the logo
-     sequence uses, instead of every cell collapsing at once. */
+     chevron. Entering gathers the cells and draws the chevrons on; leaving
+     retracts them and regrows the cells in reverse.
+
+     THE WHOLE HOVER RUNS ON ONE CLOCK, H = data-hover (450ms), on the capsule
+     buttons' own curve, so it lands in the same beat as every other hover on
+     the site (Z, 2026-10-05: at ~1.3s it read as nothing happening). Every
+     timing below is a fraction of H, so retuning is one attribute:
+       in    cells retract   0 .. 0.55H   (0.02H apart, 0.4H each)
+             chevrons draw   0.3H .. H    (0.7H, overlapping the retract)
+       out   chevrons go     0 .. 0.4H
+             cells regrow    0.1H .. H    (0.03H apart, 0.6H each)
+     The shuffle's own motion (draw 500, spin 600) is untouched. */
   Construct.prototype.offer = function (which) {
     this.want = which;
     if (this.state === "offer") { if (this.gathered) this.chevrons(which); return; }
     this.go("offer");
     this.gathered = false;
-    var self = this;
+    var self = this, H = this.t.hover;
     var order = this.sw.still ? [] : CONVERGE.concat([0, 8]);
     if (this.sw.still) { this.cells[0].g.textContent = ""; this.cells[8].g.textContent = ""; }
     order.forEach(function (idx, n) {
-      self.at(function () { if (self.cells[idx].form) self.retract(self.cells[idx]); }, n * BASE.gather);
+      self.at(function () { if (self.cells[idx].form) self.retract(self.cells[idx], H * 0.4); }, n * H * 0.02);
     });
     var hasSlash = this.logo.querySelector("path:not(.out)");
     this.at(function () {
       this.logo.textContent = "";
       var s = this.logoStroke(SLASH);
       if (hasSlash || this.sw.still) s.setAttribute("pathLength", "1");
-      else this.drawOn([s]);
+      else this.drawOn([s], 0, { dur: H * 0.7, ease: EASE_BUTTON, stagger: 0 });
       this.which = null;
       this.gathered = true;
       this.chevrons(this.want, true);
-    }, this.sw.still ? 0 : order.length * BASE.gather + BASE.out);
+    }, this.sw.still ? 0 : H * 0.3);
   };
   /* rest: one chevron per letter cell. Hovering an option marches three of
-     them across that cell, a seventh of a second apart. */
+     them across that cell, a seventh of a second apart. The march starts with
+     its first chevron already drawn (a negative delay into the loop), so the
+     option answers the pointer at once instead of 75ms later. */
   Construct.prototype.chevrons = function (which, first) {
     if (this.which === which && !first) return;
     this.which = which;
@@ -444,7 +498,7 @@
     function put(k, live, n) {
       k.classList.add("chev");
       k.setAttribute("pathLength", "1");
-      if (live) { k.classList.add("n"); k.style.animationDelay = (n * 0.14).toFixed(2) + "s"; }
+      if (live) { k.classList.add("n"); k.style.animationDelay = (n * 0.14 - 0.45).toFixed(2) + "s"; }
       self.logo.appendChild(k);
       if (!live) add.push(k);
     }
@@ -452,15 +506,17 @@
     else put(chevron("r", 4, 3, 2), false);
     if (which === "scroll") for (var b = 0; b < 3; b++) put(chevron("d", 15, 14 + b * 2, 2), true, b);
     else put(chevron("d", 15, 16, 2), false);
-    if (first) this.drawOn(add); else add.forEach(function (k) { k.classList.add("d", "on"); });
+    if (first) this.drawOn(add, 0, { dur: this.t.hover * 0.7, ease: EASE_BUTTON, stagger: 0 });
+    else add.forEach(function (k) { k.classList.add("d", "on"); });
   };
   Construct.prototype.release = function () {
     if (this.state !== "offer") return;
     if (this.sw.still) return this.resolved();
     this.go("release");
+    var H = this.t.hover;
     this.which = null;
-    this.logoClear();
-    this.at(function () { this.fillThen(this.shuffle); }, BASE.out);
+    this.drawOff([].slice.call(this.logo.childNodes), null, H * 0.4);
+    this.fillThen(this.shuffle, { start: H * 0.1, step: H * 0.03, dur: H * 0.6, end: H });
   };
 
   /* ── PAUSE: off screen or in a background tab, nothing runs ──────────────── */
@@ -630,7 +686,7 @@
       instances.push(r.__yfconstruct);
     });
   }
-  window.YFConstruct = { version: "1.0.0", boot: boot, instances: instances };
+  window.YFConstruct = { version: "1.2.0", boot: boot, instances: instances };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
