@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8"><title>YF Construct</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--brand--light:#fffffb;--brand--dark:#272727;--typography--family--meta:"Sometype Mono",monospace;--typography--size--meta:1rem;
+--padding--section--left-right:8rem;--padding--section--gap:4rem;--padding--section--gap-sm:2rem;--item-sizes--icon--distance:.625rem;--item-sizes--icon--size:2rem;
+--item-sizes--construct:9rem}
+@media (max-width:991px){:root{--item-sizes--construct:6.75rem}}
+@media (max-width:479px){:root{--item-sizes--construct:4.5rem;--padding--section--left-right:1.5rem}}
+body{margin:0;font-family:Inter,sans-serif;background:#f6f6f6}
+.yfhero-hero{position:relative;display:flex;overflow:hidden;height:100svh;flex-direction:column;justify-content:flex-end;align-items:center;background:#111;
+ background-image:radial-gradient(circle at 40% 60%,#6b5a48,#141414 60%)}
+.next{height:120vh;padding:4rem}
+.yfconstruct{position:absolute;inset:0;margin:auto;width:var(--item-sizes--construct);height:var(--item-sizes--construct);color:var(--brand--light);z-index:2}
+.yfconstruct.on-light{color:var(--brand--dark)}
+.yfconstruct-mark{position:absolute;inset:0}
+.yfconstruct-still{width:100%;height:100%;background-color:currentColor;-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='none' stroke='%23000' stroke-width='.5' stroke-miterlimit='2'%3E%3Cpath d='M1 1L3 3L5 1M3 3V5M17 13H14V17M14 15H16M18 0L0 18'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='none' stroke='%23000' stroke-width='.5' stroke-miterlimit='2'%3E%3Cpath d='M1 1L3 3L5 1M3 3V5M17 13H14V17M14 15H16M18 0L0 18'/%3E%3C/svg%3E");mask-size:contain;-webkit-mask-size:contain;mask-repeat:no-repeat}
+.yfconstruct-hitplay,.yfconstruct-hitscroll{position:absolute;width:33.334%;height:33.334%;padding:0;border:0;background:transparent;color:transparent;font-size:0;cursor:pointer;z-index:1}
+.yfconstruct-hitplay{left:0;top:0} .yfconstruct-hitscroll{right:0;bottom:0}
+.yfconstruct-prompts{position:absolute;left:var(--padding--section--left-right);bottom:var(--padding--section--gap);display:flex;column-gap:var(--padding--section--gap-sm);z-index:2}
+.yfconstruct-prompt{display:flex;align-items:center;column-gap:var(--item-sizes--icon--distance);padding:0;border:0;background:transparent;color:var(--brand--light);opacity:.66;transition:opacity .2s;cursor:pointer}
+.yfconstruct-prompt:hover{opacity:1}
+.yfconstruct-chev,.yfconstruct-chevdown{width:var(--item-sizes--icon--size);height:var(--item-sizes--icon--size);background-color:currentColor;mask-size:contain;-webkit-mask-size:contain}
+.yfconstruct-chev{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4' fill='none' stroke='%23000' stroke-width='.5' stroke-miterlimit='2'%3E%3Cpath d='M1 0L3 2L1 4'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4' fill='none' stroke='%23000' stroke-width='.5' stroke-miterlimit='2'%3E%3Cpath d='M1 0L3 2L1 4'/%3E%3C/svg%3E")} .yfconstruct-chevdown{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4' fill='none' stroke='%23000' stroke-width='.5' stroke-miterlimit='2'%3E%3Cpath d='M0 1L2 3L4 1'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4' fill='none' stroke='%23000' stroke-width='.5' stroke-miterlimit='2'%3E%3Cpath d='M0 1L2 3L4 1'/%3E%3C/svg%3E")}
+.solstack-meta-label{margin:0;font-family:var(--typography--family--meta);font-size:var(--typography--size--meta);line-height:1;font-weight:500;text-transform:uppercase;white-space:nowrap;color:inherit}
+.yfconstruct-cursor{position:fixed;left:0;top:0;z-index:1000;pointer-events:none;opacity:0;transition:opacity .2s;color:var(--brand--light);font-family:var(--typography--family--meta);font-size:var(--typography--size--meta);font-weight:500;line-height:1;text-transform:uppercase;letter-spacing:.15em;white-space:nowrap}
+.yfconstruct-modal{position:fixed;inset:0;z-index:1001;display:none;justify-content:center;align-items:center;padding:var(--padding--section--gap);background:var(--brand--dark)}
+.yfconstruct-frame{position:relative;width:100%;max-width:177.78vh;aspect-ratio:16/9}
+.yfconstruct-close{position:absolute;top:var(--padding--section--gap-sm);right:var(--padding--section--gap-sm);padding:0;border:0;background:transparent;color:var(--brand--light);cursor:pointer}
+</style></head><body>
+<section class="yfhero-hero" data-yf="hero">
+  <div class="yfconstruct " data-yfconstruct data-reel-url="https://vimeo.com/1220107317" >
+    <div class="yfconstruct-mark" data-yfconstruct-mark><div class="yfconstruct-still"></div></div>
+    <button type="button" class="yfconstruct-hitplay" data-yfconstruct-action="play" aria-label="Play reel">Play reel</button>
+    <button type="button" class="yfconstruct-hitscroll" data-yfconstruct-action="scroll" aria-label="Scroll">Scroll</button>
+  </div>
+  <div class="yfconstruct-prompts" data-yfconstruct-prompts>
+    <button type="button" class="yfconstruct-prompt" data-yfconstruct-action="play"><div class="yfconstruct-chev"></div><div class="solstack-meta-label">Play reel</div></button>
+    <button type="button" class="yfconstruct-prompt" data-yfconstruct-action="scroll"><div class="yfconstruct-chevdown"></div><div class="solstack-meta-label">Scroll</div></button>
+  </div>
+</section>
+<section class="next" id="next"><h2>Next section</h2></section>
+<div class="yfconstruct-cursor" data-yfconstruct-cursor aria-hidden="true"></div>
+<div class="yfconstruct-modal" data-yfconstruct-modal role="dialog" aria-modal="true" aria-label="YF reel" aria-hidden="true">
+  <div class="yfconstruct-frame" data-yfconstruct-frame></div>
+  <button type="button" class="yfconstruct-close" data-yfconstruct-close><div class="solstack-meta-label">Close</div></button>
+</div>
+<script src="./yf-construct.js"></script>
+</body></html>

@@ -1,0 +1,92 @@
+# YF Construct
+
+The live 3x3 construct for the yfkk.co Home hero. It shuffles its seven forms
+(Y, F, X, O, +, / and \\), resolves to the Y / F logo every 10 seconds, and
+turns into the two options on hover: a play chevron in the Y cell and a
+scroll chevron in the F cell.
+
+Lifted from **YFKK Landing MVP** (`yfagency/yfkk-landing-mvp`, Brano Beres,
+11 Aug 2026) and rebuilt as a standalone script for Webflow. `index.html` is a
+working demo with the same markup the Webflow page has.
+
+## How it is wired in Webflow
+
+The markup lives in Webflow as real elements, so the Designer shows it. In the
+Home hero you'll find **Hero Construct**, **Construct Prompts**, **Construct Cursor
+Label** and **Reel Modal**, all named in the Navigator and all `yfconstruct-*`
+classes bound to site variables. This script finds them by `data-yfconstruct*`
+attributes and draws into **Construct Mark**. Until the script runs (in the
+Designer, or with JS off), the Designer shows **Construct Still**: the resolved
+mark, drawn with a CSS mask.
+
+The script is registered in Webflow as **YFConstruct** and applied to the
+Home page footer. It's hosted from this repo through jsDelivr, pinned to a
+tag, with an integrity hash.
+
+## Settings (custom attributes on Hero Construct)
+
+| Attribute | Default | What it does |
+|---|---|---|
+| `data-reel-url` | — | The video Play opens. Vimeo or YouTube page URL |
+| `data-scroll-target` | next section | CSS selector Scroll goes to |
+| `data-logo-every` | 10000 | ms between logo sequences |
+| `data-tempo` | 700 | base ms between cell changes |
+| `data-hold` | 2000 | ms the resolved logo holds |
+| `data-wander` | 45 | % chance a cell takes any form, not its own |
+| `data-travel` | 30 | % chance two cells trade places |
+| `data-stroke` | size / 36 | stroke in px (4px at 144px) |
+
+## Switches (combo classes on Hero Construct)
+
+| Combo | Effect |
+|---|---|
+| `on-light` | dark mark for a light background (give the combo colour Brand/Dark) |
+| `still` | no shuffle: the resolved mark, chevrons on hover |
+| `no-logo` | shuffle forever, never resolve to Y / F |
+| `no-intro` | start shuffling straight away |
+| `no-fade` | don't lift and fade as the hero scrolls away |
+
+## What changed from the MVP
+
+**Kept:** Brano's motion settings (tempo, draw, out, snap, stagger, wander,
+travel, glide, burst, flick, 10s logo interval, 2s hold), the seven-form set,
+the outside-in converge, the hover state (the slash stays, Y becomes play and
+F becomes scroll), the three-chevron nudge, the cursor label, reduced motion
+showing the resolved mark, and pausing when the hero is off screen.
+
+**Animation**
+- **One geometry.** Every form sits on whole nodes, six to a cell. The MVP's
+  three X's were drawn at three slightly different insets. Now they're one
+  form, and X, Y, F and O share the same 4-node box.
+- **The X really resolves to the slash.** The MVP replaced the X with a
+  freshly drawn slash, so the slash drew twice. Now the backslash retracts
+  and the slash that stays is the one that was already drawn.
+- **Intro.** The page opens on the mark: Y and F draw, the slash crosses,
+  and then the seven cells grow in. Switch off with `no-intro`.
+- **Hover is choreographed.** Entering gathers the cells outside-in and draws
+  the chevrons on. Leaving regrows them in reverse. In the MVP everything
+  collapsed and reappeared at once.
+- **No stuck strokes.** Every timer belongs to the instance and is cancelled
+  on each state change. In the MVP a quick hover in and out could let a late
+  callback blank a freshly painted cell.
+- **A change is a change.** A cell never repaints the form it already holds.
+- Also pauses in background tabs, not only off screen.
+
+**Code**
+- Standalone: no lattice, no page-cell maths, no dev HUD, no token
+  silhouettes. 28 KB of commented source, against the MVP's 845 KB page.
+- SVG styles are scoped to `.yfconstruct-svg`, so nothing leaks into the site.
+- Timing and behaviour are set in the Designer (attributes and combo classes),
+  not in code.
+
+## Releasing a new version
+
+1. Edit `yf-construct.js` and bump the version in its header and in
+   `window.YFConstruct`.
+2. Commit, tag `vX.Y.Z`, push.
+3. In Webflow, register a new version of **YFConstruct** with the new jsDelivr
+   URL (`https://cdn.jsdelivr.net/gh/yfagency/yf-construct@vX.Y.Z/yf-construct.js`)
+   and its hash (`openssl dgst -sha384 -binary yf-construct.js | openssl base64 -A`).
+   Then switch the Home page to that version and publish.
+
+A tag is never moved: the hash is tied to its exact bytes.
