@@ -1,4 +1,4 @@
-/*! YF Construct v1.5.0 · the live 3x3 for the yfkk.co Home hero
+/*! YF Construct v1.6.0 · the live 3x3 for the yfkk.co Home hero
  *
  *  Ported from the YFKK Landing MVP (github.com/yfagency/yfkk-landing-mvp,
  *  Brano Beres, 11 Aug 2026), which ported it from construct-lab. Brano's
@@ -196,12 +196,14 @@
     svg.appendChild(defs);
     this.cells = [];
     for (var i = 0; i < 9; i++) {
-      /* Each cell clips to itself, plus a margin on the sides it shares with
-         another cell, so a slash's run-on (see strokesOf) can reach across the
-         corner. The construct's outer edges stay cut flush. */
+      /* Each cell clips to itself plus a one-node margin on every side, so a
+         slash's run-on (see strokesOf) reaches across the corner into the
+         next cell, and a point or line end on the construct's outer edge is
+         drawn whole instead of being sliced flat along the edge (Z,
+         2026-10-13). The margin still keeps a traded form hidden until it
+         slides into its own cell. */
       var col = i % 3, row = Math.floor(i / 3), M = 1;
-      var x0 = col > 0 ? -M : 0, y0 = row > 0 ? -M : 0;
-      var x1 = col < 2 ? 6 + M : 6, y1 = row < 2 ? 6 + M : 6;
+      var x0 = -M, y0 = -M, x1 = 6 + M, y1 = 6 + M;
       var clipId = "yfconstructClip" + this.id + "_" + i;
       var cp = el("clipPath", { id: clipId });
       cp.appendChild(el("rect", { x: x0, y: y0, width: x1 - x0, height: y1 - y0 }));
@@ -793,7 +795,7 @@
       instances.push(r.__yfconstruct);
     });
   }
-  window.YFConstruct = { version: "1.5.0", boot: boot, instances: instances };
+  window.YFConstruct = { version: "1.6.0", boot: boot, instances: instances };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();

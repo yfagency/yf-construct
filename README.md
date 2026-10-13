@@ -110,6 +110,13 @@ showing the resolved mark, and pausing when the hero is off screen.
 
 ## Changelog
 
+**1.6.0** (13 Oct 2026). Nothing is cut off at the construct's outer edges.
+Each cell used to clip flat along the outside of the 3x3, so a point on the
+edge (two slashes meeting in a > on the right side, or a ^ on top) lost its tip,
+and every line end there was sliced along the edge. Cells now clip with a
+one-node margin on every side, so every shape draws whole. The margin still
+hides a traded form until it slides into its own cell.
+
 **1.5.0** (5 Oct 2026). The corner prompts' chevrons animate like the
 construct's options. Hovering or focusing Play reel or Scroll marches three
 chevrons in the icon, with the same keyframes, stagger and head start as the
@@ -124,7 +131,7 @@ end to a point. So a run of slashes across cells read as separate dashes with
 gaps between them. Each slash now runs half a stroke width past its corners,
 and cells clip with a small margin on their inside edges. Slashes in line
 overlap into one long line, and two meeting at a right angle close into a
-clean corner. The construct's outer edges are still cut flush.
+clean corner.
 
 **1.3.0** (5 Oct 2026). The O is always a whole ring. It used to draw on as a
 stroke like the other forms, and the slow end of that draw held the last gap
